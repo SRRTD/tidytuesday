@@ -27,17 +27,27 @@ chelsea_players %<>%
       xg_per_90 = (cumulative_xg / cumulative_minutes) * 90,
       xg_per_shot = cumulative_xg / cumulative_shots
     )})) %>%
-  unnest(cols = c(data))
+  unnest(cols = c(data)) %>%
+  ungroup()
 
 chelsea_players %>%
-  ungroup() %>%
-  filter(md %in% 1:20) %>%
+  select(md, player, goals, cumulative_goals) %>%
   group_by(md) %>%
-  arrange(desc(cumulative_goals)) %>%
-  #slice_head(n = 5) %>%
-  ggplot(aes(x = cumulative_goals, y = reorder(player, cumulative_goals))) +
-  geom_col() +
-  labs(title = 'Match Day: {closest_state}', x = 'Cumulative Goals', y = 'Player') + 
-  transition_states(md, transition_length = 2, state_length = 1) + 
-  ease_aes('cubic-in-out')
+  mutate(rank = rank(-cumulative_goals, ties.method = "first")) %>%
+  arrange(md) %>% 
+  ggplot(aes(x = rank, y = cumulative_goals)) +
+  geom_col(fill = "#034694", width = 0.5) +
+  geom_text(aes(y = cumulative_goals, label = player , hjust = -0.05), size = 5) +
+  geom_text(aes(y = cumulative_goals, label = round(cumulative_goals), hjust = 3), size = 5, color = "white") +
+  coord_flip() +
+  xlim(5.5, 0.5) +
+  ylim(0, 20) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    plot.margin = margin(10, 10, 10, 10)) +
+  transition_states(md, state_length = 5, transition_length = 0, wrap = FALSE)
 
+
+  
