@@ -7,20 +7,11 @@ chelsea_data <-
   read_rds("25W1/DATA/chelsea_data.rds") %>%
   mutate(date = ymd_hms(date))
 
-md <-
-  chelsea_data %>% 
-  select(match_id, date) %>%
-  ungroup() %>%
-  mutate(md = 1:20) %>%
-  select(match_id, md)
-
-chelsea_data %<>%
-  left_join(md)
-
 chelsea_players <- 
   chelsea_data %>%
   select(!shots) %>%
-  unnest(cols = c(players))
+  unnest(cols = c(players)) %>%
+  ungroup()
 
 chelsea_players %<>%
   group_by(player) %>%
@@ -38,4 +29,15 @@ chelsea_players %<>%
     )})) %>%
   unnest(cols = c(data))
 
+chelsea_players %>%
+  ungroup() %>%
+  filter(md %in% 1:20) %>%
+  group_by(md) %>%
+  arrange(desc(cumulative_goals)) %>%
+  #slice_head(n = 5) %>%
+  ggplot(aes(x = cumulative_goals, y = reorder(player, cumulative_goals))) +
+  geom_col() +
+  labs(title = 'Match Day: {closest_state}', x = 'Cumulative Goals', y = 'Player') + 
+  transition_states(md, transition_length = 2, state_length = 1) + 
+  ease_aes('cubic-in-out')
 
