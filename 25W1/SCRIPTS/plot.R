@@ -100,3 +100,5 @@ base <-
     transition_states(md, transition_length = 0, state_length = 1, wrap = FALSE)
 
 animate(base, fps = 1, duration = 40, height = 600, width = 800, units = "px")
+
+anim_save(filename = "chelsea_shots.gif", path = "25W1/OUTPUT")
