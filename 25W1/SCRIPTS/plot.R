@@ -68,29 +68,35 @@ chelsea_shots <-
   unnest(cols = c(shots)) %>%
   ungroup()
 
-chelsea_shots %>%
-  mutate(
-    x_coord = X * 100,
-    y_coord = Y * 100,
-    label = paste("Matchday", md, if_else(h_a == "h", "vs.", "@"), if_else(h_a == "h", away_team, home_team))) %>%
-  ggplot(aes(x = x_coord,
-             y = y_coord,
-             color = if_else(result == "Goal", "Goal", "No Goal"))) +
-  annotate_pitch(limits = FALSE) +
-  geom_text_repel(aes(label = player), data = . %>% filter(result == "Goal"), color = "black", seed = 123) +
-  geom_point(aes(shape = if_else(result == "Goal", "Goal", "No Goal")),
-             size = 3) +
-  geom_text(aes(x = 102,
-                y = 100,
-                label = label),
-            color = "black",
-            hjust = 0,
-            size = 5) +
-  coord_flip(xlim = c(49, 105)) +
-  scale_y_reverse() +
-  scale_color_manual(values = c("#EE242C", "#034694")) +
-  scale_shape_manual(values = c(16, 1)) +
-  theme_pitch() +
-  guides(color = "none", shape = "none") +
-  transition_states(md, transition_length = 0, state_length = 1, wrap = FALSE)
+base <-
+  chelsea_shots %>%
+    arrange() %>%
+    mutate(
+      x_coord = X * 100,
+      y_coord = Y * 100) %>%
+    ggplot(aes(x = x_coord,
+               y = y_coord,
+               color = if_else(result == "Goal", "Goal", "No Goal"))) +
+    annotate_pitch(limits = FALSE) +
+    geom_text_repel(aes(label = if_else(result == "Goal", player, "")), color = "black", seed = 123) +
+    geom_point(aes(shape = if_else(result == "Goal", "Goal", "No Goal")),
+               size = 3) +
+    geom_text(aes(x = 102,
+                  y = 100,
+                  label = paste("Matchday", md, if_else(h_a == "h", "vs.", "@"), if_else(h_a == "h", away_team, home_team))),
+              color = "black",
+              hjust = 0,
+              size = 5) +
+    geom_text(
+      aes(x = 102, y = 22, label = paste(home_team, home_goals, "-", away_goals, away_team)),
+      color = "black",
+      size = 5) +
+    coord_flip(xlim = c(49, 105)) +
+    scale_y_reverse() +
+    scale_color_manual(values = c("#EE242C", "#034694")) +
+    scale_shape_manual(values = c(16, 1)) +
+    theme_pitch() +
+    guides(color = "none", shape = "none") +
+    transition_states(md, transition_length = 0, state_length = 1, wrap = FALSE)
 
+animate(base, fps = 1, duration = 40, height = 600, width = 800, units = "px")
