@@ -1,6 +1,7 @@
 library(magrittr)
 library(tidyverse)
 library(tidytext)
+library(patchwork)
 
 data <- tidytuesdayR::tt_load(2025, week = 2)
 
@@ -51,20 +52,69 @@ conf_24 %<>%
   mutate(description = str_to_lower(description), 
          description = str_replace_all(description, two_gram_vec))
 
-conf_23 %>%
+conf_23_words <- 
+  conf_23 %>%
   distinct(session_title, .keep_all = TRUE) %>%
   group_by(block_track_title) %>%
   summarise(sessions = str_c(session_abstract, collapse = " ")) %>%
   ungroup() %>%
   unnest_tokens(word, sessions) %>%
   anti_join(stop_words %>% filter(!word == "r")) %>%
-  count(word, sort = TRUE)
+  count(word, sort = TRUE) %>%
+  rename(count_2023 = n) %>%
+  filter(word != "talk")
 
-conf_24 %>%
-  distinct(talk_title, .keep_all = TRUE) %>%
-  group_by(track) %>%
-  summarise(sessions = str_c(description, collapse = " ")) %>%
-  ungroup() %>%
-  unnest_tokens(word, sessions) %>%
-  anti_join(stop_words %>% filter(!word == "r")) %>%
-  count(word, sort = TRUE)
+conf_24_words <- 
+  conf_24 %>%
+    distinct(talk_title, .keep_all = TRUE) %>%
+    group_by(track) %>%
+    summarise(sessions = str_c(description, collapse = " ")) %>%
+    ungroup() %>%
+    unnest_tokens(word, sessions) %>%
+    anti_join(stop_words %>% filter(!word == "r")) %>%
+    count(word, sort = TRUE) %>%
+  rename(count_2024 = n) %>%
+  filter(word != "talk")
+
+join <-
+  conf_23_words %>%
+    full_join(conf_24_words, by = "word") %>%
+    mutate(count_2023 = ifelse(is.na(count_2023), 0, count_2023), 
+           count_2024 = ifelse(is.na(count_2024), 0, count_2024)) %>%
+    mutate(diff = count_2024 - count_2023)
+
+#plot_2023 <-
+  join %>%
+  mutate(word = fct_reorder(word, count_2023)) %>%
+  arrange(desc(count_2023)) %>%
+  slice_head(n = 6) %>%
+  ggplot(aes(count_2023, word)) +
+  geom_col() +
+  theme_bw() +
+  labs(
+    x = "Count",
+    y = "Token",
+    title = "Most common tokens in 2023")) +
+  theme(
+    
+  )
+  
+  
+  join %>%
+    mutate(word = fct_reorder(word, count_2024)) %>%
+    arrange(desc(count_2024)) %>%
+    slice_head(n = 6) %>%
+    ggplot(aes(count_2024, word)) +
+    geom_col()
+  
+join %>%
+  arrange(diff) %>%
+  slice_head(n = 6) %>%
+  bind_rows(                         #this is one of the ugliest things i've done
+    join %>% arrange(desc(diff)) %>%
+      slice_head(n = 6)) %>%
+  mutate(word = fct_reorder(word, diff)) %>%
+  ggplot(aes(diff, word)) +
+  geom_col() +
+  xlim(-51, 51)
+  
