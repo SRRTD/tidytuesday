@@ -81,7 +81,7 @@ join <-
     full_join(conf_24_words, by = "word") %>%
     mutate(count_2023 = ifelse(is.na(count_2023), 0, count_2023), 
            count_2024 = ifelse(is.na(count_2024), 0, count_2024)) %>%
-    mutate(diff = count_2024 - count_2023)
+    mutate(diff = count_2024 - count_2023) %>% view()
 
 #plot_2023 <-
   join %>%
@@ -89,14 +89,16 @@ join <-
   arrange(desc(count_2023)) %>%
   slice_head(n = 6) %>%
   ggplot(aes(count_2023, word)) +
-  geom_col() +
+  geom_col(color = "black", fill = "#5653e1") +
   theme_bw() +
   labs(
     x = "Count",
     y = "Token",
-    title = "Most common tokens in 2023")) +
+    title = "Most common tokens in 2023") +
   theme(
-    
+    axis.title = element_text(size = 15, vjust = 0.5, family = "sans"),
+    plot.title = element_text(size = 20, hjust = 0.5),
+    axis.text.y = element_text(size = 12)
   )
   
   
