@@ -107,7 +107,7 @@ plot_2023 <-
 plot_2024 <-
   join %>%
     mutate(word = fct_reorder(word, count_2024)) %>%
-    arrange(desc(count_2023)) %>%
+    arrange(desc(count_2024)) %>%
     slice_head(n = 6) %>%
     ggplot(aes(count_2024, word)) +
     scale_x_continuous(limits = c(0, 140), breaks = seq(0, 140, 20), minor_breaks = NULL) +
@@ -136,8 +136,8 @@ diff_plot <-
     ggplot(aes(diff, word)) +
     geom_col(aes(fill = diff)) +
     geom_vline(aes(xintercept = 0), color = "black", size = 0.5) +
-    annotate("text", x = -35, y = 3, label = "More mentions in 2023 \n than in 2024", lineheight = 0.3) +
-    annotate("text", x = 35, y = 10, label = "More mentions in 2024 \n than in 2023", lineheight = 0.3) +
+    annotate("text", x = -35, y = 3, label = "More mentions in 2023 \n than in 2024") +
+    annotate("text", x = 35, y = 10, label = "More mentions in 2024 \n than in 2023") +
     xlim(-51, 51) +
     scale_fill_continuous(type = "viridis") +
     theme_bw() +
@@ -156,12 +156,13 @@ diff_plot <-
       panel.grid.major.x = element_blank()
     )
 
-((plot_2023/plot_2024) | diff_plot) + 
-  plot_annotation(title = "Common words in posit::conf talks",
-                  subtitle = "Comparing the most commonly observed words in the descriptions for different talks at posit::conf in 2023 and 2024.\nRepeated composite nouns like \"data science\", \"posit connect\" and \"machine learning\" were treated as single words.",
-                  theme = theme(plot.title = element_text(size = 18, hjust = 0.5),
-                                plot.subtitle = element_text(size = 12, lineheight = 0.5)))
+a <-
+  ((plot_2023/plot_2024) | diff_plot) + 
+    plot_annotation(title = "Common words in posit::conf talks",
+                    subtitle = "Comparing the most commonly observed words in the descriptions for different talks at posit::conf in 2023 and 2024.\nRepeated composite nouns like \"data science\", \"posit connect\" and \"machine learning\" were treated as single words.",
+                    theme = theme(plot.title = element_text(size = 18, hjust = 0.5),
+                                  plot.subtitle = element_text(size = 12)))
 
-ggsave("words.png", device = "png", path = "25W2/OUTPUT/", width = 1408, height = 792, units = "px", dpi = 320)
+ggsave("words.png", device = "png", path = "25W2/OUTPUT/", dpi = 320, plot = a)
 
                                                       
