@@ -83,40 +83,85 @@ join <-
            count_2024 = ifelse(is.na(count_2024), 0, count_2024)) %>%
     mutate(diff = count_2024 - count_2023) %>% view()
 
-#plot_2023 <-
+plot_2023 <-
   join %>%
   mutate(word = fct_reorder(word, count_2023)) %>%
   arrange(desc(count_2023)) %>%
   slice_head(n = 6) %>%
   ggplot(aes(count_2023, word)) +
-  geom_col(color = "black", fill = "#5653e1") +
+  scale_x_continuous(limits = c(0, 140), breaks = seq(0, 140, 20), minor_breaks = NULL) +
+  geom_col(fill = "#5653e1") +
   theme_bw() +
   labs(
     x = "Count",
-    y = "Token",
-    title = "Most common tokens in 2023") +
+    y = NULL,
+    title = "Most common words in 2023") +
   theme(
-    axis.title = element_text(size = 15, vjust = 0.5, family = "sans"),
-    plot.title = element_text(size = 20, hjust = 0.5),
-    axis.text.y = element_text(size = 12)
+    axis.title = element_text(size = 12, vjust = 0.5, family = "sans"),
+    plot.title = element_text(size = 15, hjust = 0.5),
+    axis.text.y = element_text(size = 12),
+    panel.grid.minor.y = element_blank(), 
+    panel.grid.major.y = element_blank()
   )
-  
-  
+
+plot_2024 <-
   join %>%
     mutate(word = fct_reorder(word, count_2024)) %>%
-    arrange(desc(count_2024)) %>%
+    arrange(desc(count_2023)) %>%
     slice_head(n = 6) %>%
     ggplot(aes(count_2024, word)) +
-    geom_col()
-  
-join %>%
-  arrange(diff) %>%
-  slice_head(n = 6) %>%
-  bind_rows(                         #this is one of the ugliest things i've done
-    join %>% arrange(desc(diff)) %>%
-      slice_head(n = 6)) %>%
-  mutate(word = fct_reorder(word, diff)) %>%
-  ggplot(aes(diff, word)) +
-  geom_col() +
-  xlim(-51, 51)
-  
+    scale_x_continuous(limits = c(0, 140), breaks = seq(0, 140, 20), minor_breaks = NULL) +
+    geom_col(fill = "#5653e1") +
+    theme_bw() +
+    labs(
+      x = "Count",
+      y = NULL,
+      title = "Most common words in 2024") +
+    theme(
+      axis.title = element_text(size = 12, vjust = 0.5, family = "sans"),
+      plot.title = element_text(size = 15, hjust = 0.5),
+      axis.text.y = element_text(size = 12),
+      panel.grid.minor.y = element_blank(), 
+      panel.grid.major.y = element_blank()
+    )
+
+diff_plot <-  
+  join %>%
+    arrange(diff) %>%
+    slice_head(n = 6) %>%
+    bind_rows(                         #this is one of the ugliest things i've done
+      join %>% arrange(desc(diff)) %>%
+        slice_head(n = 6)) %>%
+    mutate(word = fct_reorder(word, diff)) %>%
+    ggplot(aes(diff, word)) +
+    geom_col(aes(fill = diff)) +
+    geom_vline(aes(xintercept = 0), color = "black", size = 0.5) +
+    annotate("text", x = -35, y = 3, label = "More mentions in 2023 \n than in 2024", lineheight = 0.3) +
+    annotate("text", x = 35, y = 10, label = "More mentions in 2024 \n than in 2023", lineheight = 0.3) +
+    xlim(-51, 51) +
+    scale_fill_continuous(type = "viridis") +
+    theme_bw() +
+    labs(
+      x = "Difference in count",
+      y = NULL,
+      title = "Words with the largest difference in mentions") +
+    guides(fill = "none") +
+    theme(
+      axis.title = element_text(size = 12, vjust = 0.5, family = "sans"),
+      plot.title = element_text(size = 15, hjust = 0.5),
+      axis.text.y = element_text(size = 12),
+      panel.grid.minor.y = element_blank(), 
+      panel.grid.major.y = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      panel.grid.major.x = element_blank()
+    )
+
+((plot_2023/plot_2024) | diff_plot) + 
+  plot_annotation(title = "Common words in posit::conf talks",
+                  subtitle = "Comparing the most commonly observed words in the descriptions for different talks at posit::conf in 2023 and 2024.\nRepeated composite nouns like \"data science\", \"posit connect\" and \"machine learning\" were treated as single words.",
+                  theme = theme(plot.title = element_text(size = 18, hjust = 0.5),
+                                plot.subtitle = element_text(size = 12, lineheight = 0.5)))
+
+ggsave("words.png", device = "png", path = "25W2/OUTPUT/", width = 1408, height = 792, units = "px", dpi = 320)
+
+                                                      
